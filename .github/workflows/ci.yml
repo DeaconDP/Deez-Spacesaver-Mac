@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Xcode project
+        run: python3 scripts/generate-xcodeproj.py
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project DeezSpacesaver.xcodeproj \
+            -scheme DeezSpacesaver \
+            -configuration Debug \
+            -derivedDataPath build/DerivedData \
+            build
+
+      - name: Test
+        run: |
+          xcodebuild \
+            -project DeezSpacesaver.xcodeproj \
+            -scheme DeezSpacesaver \
+            -configuration Debug \
+            -derivedDataPath build/DerivedData \
+            test
