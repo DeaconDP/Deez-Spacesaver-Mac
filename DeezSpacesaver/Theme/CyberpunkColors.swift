@@ -16,6 +16,9 @@ enum CyberpunkColors {
     static let accentWarn = Color(red: 212/255, green: 160/255, blue: 23/255)
     static let accentTertiary = Color(red: 123/255, green: 92/255, blue: 1)
 
+    static let sizeLarge = Color(red: 255/255, green: 214/255, blue: 0)
+    static let sizeHuge = Color(red: 255/255, green: 149/255, blue: 0)
+
     static let textPrimary = Color(red: 240/255, green: 242/255, blue: 245/255)
     static let textSecondary = Color(red: 168/255, green: 176/255, blue: 188/255)
     static let textMuted = Color(red: 107/255, green: 117/255, blue: 133/255)

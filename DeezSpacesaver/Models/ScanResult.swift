@@ -1,6 +1,6 @@
 import Foundation
 
-enum RiskLevel: String, Codable, CaseIterable {
+enum RiskLevel: String, Codable, CaseIterable, Comparable {
     case safe
     case review
     case caution
@@ -11,6 +11,18 @@ enum RiskLevel: String, Codable, CaseIterable {
         case .review: return "Review"
         case .caution: return "Caution"
         }
+    }
+
+    private var sortRank: Int {
+        switch self {
+        case .safe: return 0
+        case .review: return 1
+        case .caution: return 2
+        }
+    }
+
+    static func < (lhs: RiskLevel, rhs: RiskLevel) -> Bool {
+        lhs.sortRank < rhs.sortRank
     }
 }
 
@@ -42,6 +54,12 @@ struct ScannableItem: Identifiable, Hashable, Codable {
         self.categoryID = categoryID
         self.riskLevel = riskLevel
         self.detail = detail
+    }
+}
+
+extension ScannableItem {
+    var sortableModifiedDate: Date {
+        modifiedDate ?? .distantPast
     }
 }
 

@@ -6,6 +6,7 @@ struct ScanResultsView: View {
     @State private var selectedIDs: Set<UUID> = []
     @State private var showConfirmLargeBatch = false
     @State private var pendingCleanup: [ScannableItem] = []
+    @State private var sortOrder = [KeyPathComparator(\ScannableItem.sizeBytes, order: .reverse)]
 
     private var category: CleanupCategory? {
         guard let id = appState.selectedCategoryID else { return nil }
@@ -52,6 +53,10 @@ struct ScanResultsView: View {
             CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
             value: appState.selectedCategoryID
         )
+        .onChange(of: appState.selectedCategoryID) { _, _ in
+            selectedIDs.removeAll()
+            sortOrder = [KeyPathComparator(\ScannableItem.sizeBytes, order: .reverse)]
+        }
         .background(CyberpunkColors.bgPrimary)
         .alert("Confirm Large Cleanup", isPresented: $showConfirmLargeBatch) {
             Button("Cancel", role: .cancel) {}
@@ -205,21 +210,24 @@ struct ScanResultsView: View {
                 value: selectedIDs.count
             )
 
-            Table(items, selection: $selectedIDs) {
+            Table(items, selection: $selectedIDs, sortOrder: $sortOrder) {
                 TableColumn("") { item in
                     selectionIcon(for: item)
                 }
                 .width(30)
 
-                TableColumn("Risk") { item in
+                TableColumn("Risk", value: \.riskLevel) { item in
                     RiskBadge(level: item.riskLevel)
                 }
                 .width(72)
 
-                TableColumn("Name") { item in
+                TableColumn("Name", value: \.name) { item in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(item.name)
-                            .foregroundStyle(CyberpunkColors.textPrimary)
+                        Button(item.name) {
+                            FileRevealService.reveal(path: item.path)
+                        }
+                        .buttonStyle(.link)
+                        .foregroundStyle(CyberpunkColors.textPrimary)
                         if let detail = item.detail {
                             Text(detail)
                                 .font(CyberpunkTypography.body(10))
@@ -228,14 +236,14 @@ struct ScanResultsView: View {
                     }
                 }
 
-                TableColumn("Size") { item in
+                TableColumn("Size", value: \.sizeBytes) { item in
                     Text(ByteFormatting.string(for: item.sizeBytes))
                         .font(CyberpunkTypography.mono(12))
-                        .foregroundStyle(CyberpunkColors.accent)
+                        .foregroundStyle(ByteFormatting.color(for: item.sizeBytes))
                 }
                 .width(90)
 
-                TableColumn("Modified") { item in
+                TableColumn("Modified", value: \.sortableModifiedDate) { item in
                     if let date = item.modifiedDate {
                         Text(date, style: .date)
                             .font(CyberpunkTypography.body(11))
@@ -244,7 +252,7 @@ struct ScanResultsView: View {
                 }
                 .width(100)
 
-                TableColumn("Path") { item in
+                TableColumn("Path", value: \.path) { item in
                     Text(item.path)
                         .font(CyberpunkTypography.mono(10))
                         .foregroundStyle(CyberpunkColors.textMuted)
@@ -253,6 +261,7 @@ struct ScanResultsView: View {
                 }
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
+            .id("\(category.id)-\(result?.scannedAt.timeIntervalSince1970 ?? 0)-\(items.count)")
         }
     }
 

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 import SwiftUI
 
@@ -30,10 +31,15 @@ final class AppState: ObservableObject {
     private let fdaService = FullDiskAccessService()
     private var didBecomeActiveObserver: NSObjectProtocol?
     private var bannerDismissTask: Task<Void, Never>?
+    private var scanEngineCancellable: AnyCancellable?
 
     var appBundlePath: String { fdaService.appBundlePath }
 
     init() {
+        scanEngineCancellable = scanEngine.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
         refreshFullDiskAccess()
         refreshDiskStats()
         if !settings.hasSeenFDAOnboarding {

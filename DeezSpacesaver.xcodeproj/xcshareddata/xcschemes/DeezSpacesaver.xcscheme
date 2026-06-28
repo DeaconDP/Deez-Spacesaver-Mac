@@ -3,20 +3,20 @@
    <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
       <BuildActionEntries>
          <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
-            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B63C1635F8384767AD9F6FAB" BuildableName="DeezSpacesaver.app" BlueprintName="DeezSpacesaver" ReferencedContainer="container:DeezSpacesaver.xcodeproj"/>
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="46BCBB4B7BA04706BB4D01D3" BuildableName="DeezSpacesaver.app" BlueprintName="DeezSpacesaver" ReferencedContainer="container:DeezSpacesaver.xcodeproj"/>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB">
       <Testables>
          <TestableReference skipped="NO">
-            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="E9F1AE8E69B54DAB977CA500" BuildableName="DeezSpacesaverTests.xctest" BlueprintName="DeezSpacesaverTests" ReferencedContainer="container:DeezSpacesaver.xcodeproj"/>
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="7F445FC493A94914A07CB12E" BuildableName="DeezSpacesaverTests.xctest" BlueprintName="DeezSpacesaverTests" ReferencedContainer="container:DeezSpacesaver.xcodeproj"/>
          </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB">
       <BuildableProductRunnable runnableDebuggingMode="0">
-         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B63C1635F8384767AD9F6FAB" BuildableName="DeezSpacesaver.app" BlueprintName="DeezSpacesaver" ReferencedContainer="container:DeezSpacesaver.xcodeproj"/>
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="46BCBB4B7BA04706BB4D01D3" BuildableName="DeezSpacesaver.app" BlueprintName="DeezSpacesaver" ReferencedContainer="container:DeezSpacesaver.xcodeproj"/>
       </BuildableProductRunnable>
    </LaunchAction>
 </Scheme>
