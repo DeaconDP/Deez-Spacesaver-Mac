@@ -203,11 +203,14 @@ lines.extend([
     "/* Begin XCBuildConfiguration section */",
 ])
 
-common_swift = "SWIFT_VERSION = 5.9; MACOSX_DEPLOYMENT_TARGET = 14.0;"
+common_swift = (
+    "SWIFT_VERSION = 5.9; MACOSX_DEPLOYMENT_TARGET = 14.4; "
+    "SWIFT_STRICT_CONCURRENCY = complete;"
+)
 app_debug = (
     "ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; "
     "CODE_SIGN_ENTITLEMENTS = DeezSpacesaver/DeezSpacesaver.entitlements; "
-    "CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; "
+    "CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 3; "
     "DEVELOPMENT_TEAM = \"\"; ENABLE_HARDENED_RUNTIME = YES; ENABLE_TESTABILITY = YES; "
     "GENERATE_INFOPLIST_FILE = NO; "
     "INFOPLIST_FILE = DeezSpacesaver/Info.plist; "
@@ -269,4 +272,40 @@ with open(scheme_path, "w") as f:
 </Scheme>
 """)
 
+workspace_dir = os.path.join(root, "DeezSpacesaver.xcodeproj/project.xcworkspace")
+shareddata_dir = os.path.join(workspace_dir, "xcshareddata")
+os.makedirs(shareddata_dir, exist_ok=True)
+
+contents_path = os.path.join(workspace_dir, "contents.xcworkspacedata")
+with open(contents_path, "w") as f:
+    f.write("""<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "self:">
+   </FileRef>
+</Workspace>
+""")
+
+workspace_settings_path = os.path.join(shareddata_dir, "WorkspaceSettings.xcsettings")
+with open(workspace_settings_path, "w") as f:
+    f.write("""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>BuildLocationStyle</key>
+\t<string>UseAppPreferences</string>
+\t<key>CustomBuildLocationType</key>
+\t<string>RelativeToDerivedData</string>
+\t<key>DerivedDataCustomLocation</key>
+\t<string>build/DerivedData</string>
+\t<key>DerivedDataLocationStyle</key>
+\t<string>WorkspaceRelativePath</string>
+\t<key>IssueFilteringStyle</key>
+\t<string>ShowAll</string>
+</dict>
+</plist>
+""")
+
 print(f"Wrote {proj_path}")
+print(f"Wrote {workspace_settings_path}")

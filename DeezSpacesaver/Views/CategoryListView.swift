@@ -1,5 +1,17 @@
 import SwiftUI
 
+private struct SidebarSectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(CyberpunkTypography.body(11).weight(.semibold))
+            .foregroundStyle(CyberpunkColors.textMuted)
+            .textCase(.uppercase)
+            .padding(.top, AppLayout.sidebarSectionSpacing)
+    }
+}
+
 struct CategoryRowView: View {
     let category: CleanupCategory
     let result: CategoryScanResult?
@@ -15,19 +27,23 @@ struct CategoryRowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
                 Image(systemName: category.systemImage)
-                    .frame(width: 20)
+                    .frame(width: 20, height: 20, alignment: .center)
                     .foregroundStyle(isSelected ? CyberpunkColors.accent : CyberpunkColors.textSecondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(category.name)
                         .font(CyberpunkTypography.body(13).weight(.medium))
                         .foregroundStyle(CyberpunkColors.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                     Text(subtitle)
                         .font(CyberpunkTypography.body(10))
-                        .foregroundStyle(CyberpunkColors.textMuted)
+                        .foregroundStyle(subtitleColor)
                         .lineLimit(1)
+                        .truncationMode(.tail)
+                        .layoutPriority(1)
                         .contentTransition(.numericText())
                         .animation(
                             CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
@@ -35,16 +51,17 @@ struct CategoryRowView: View {
                         )
                 }
 
-                Spacer()
+                Spacer(minLength: 4)
 
                 statusBadge
+                    .frame(width: 12, alignment: .center)
                     .animation(
                         CyberpunkAnimation.apply(CyberpunkAnimation.quick, reduceMotion: reduceMotion),
                         value: statusAnimationKey
                     )
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(.horizontal, AppLayout.sidebarRowHorizontal)
+            .padding(.vertical, AppLayout.sidebarRowVertical)
 
             if let progress = scanProgress {
                 GeometryReader { geometry in
@@ -63,8 +80,12 @@ struct CategoryRowView: View {
                 .transition(.opacity)
             }
         }
-        .background(isSelected ? CyberpunkColors.accentDim : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+        .listRowBackground(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? CyberpunkColors.accentDim : Color.clear)
+        )
+        .listRowSeparator(.hidden)
         .animation(
             CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
             value: isSelected
@@ -91,6 +112,21 @@ struct CategoryRowView: View {
         }
     }
 
+    private var subtitleColor: Color {
+        if category.requiresFullDiskAccess && !hasFDA {
+            return CyberpunkColors.textMuted
+        }
+        if let result, !result.items.isEmpty {
+            return ByteFormatting.reclaimableColor(for: result.totalBytes)
+        }
+        return CyberpunkColors.textMuted
+    }
+
+    private var reclaimableBytes: Int64? {
+        guard let result, !result.items.isEmpty else { return nil }
+        return result.totalBytes
+    }
+
     private var subtitle: String {
         if category.requiresFullDiskAccess && !hasFDA {
             return "Needs Full Disk Access"
@@ -101,34 +137,47 @@ struct CategoryRowView: View {
         if category.isGuidedOnly {
             return "Guided"
         }
-        return category.description
+        return "Ready to scan"
     }
 
     @ViewBuilder
     private var statusBadge: some View {
         switch status {
         case .idle:
-            if let result, !result.items.isEmpty {
-                Text("\(result.items.count)")
-                    .font(CyberpunkTypography.mono(10))
-                    .foregroundStyle(CyberpunkColors.accent)
+            if let bytes = reclaimableBytes {
+                Circle()
+                    .fill(ByteFormatting.reclaimableColor(for: bytes))
+                    .frame(width: 6, height: 6)
                     .transition(.scale.combined(with: .opacity))
             }
         case .scanning:
-            ProgressView()
-                .scaleEffect(0.6)
+            CyberpunkPulseDot(color: scanningDotColor)
                 .transition(.scale.combined(with: .opacity))
         case .completed:
-            Circle()
-                .fill(CyberpunkColors.accent)
-                .frame(width: 6, height: 6)
-                .transition(.scale.combined(with: .opacity))
+            if let bytes = reclaimableBytes {
+                Circle()
+                    .fill(ByteFormatting.reclaimableColor(for: bytes))
+                    .frame(width: 6, height: 6)
+                    .transition(.scale.combined(with: .opacity))
+            } else {
+                Circle()
+                    .fill(CyberpunkColors.accent)
+                    .frame(width: 6, height: 6)
+                    .transition(.scale.combined(with: .opacity))
+            }
         case .failed:
             Circle()
                 .fill(CyberpunkColors.accentSecondary)
                 .frame(width: 6, height: 6)
                 .transition(.scale.combined(with: .opacity))
         }
+    }
+
+    private var scanningDotColor: Color {
+        if let bytes = reclaimableBytes {
+            return ByteFormatting.reclaimableColor(for: bytes)
+        }
+        return CyberpunkColors.accent
     }
 }
 
@@ -137,27 +186,37 @@ struct SettingsRowView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "gearshape")
-                .frame(width: 20)
+                .frame(width: 20, height: 20, alignment: .center)
                 .foregroundStyle(isSelected ? CyberpunkColors.accent : CyberpunkColors.textSecondary)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Settings")
                     .font(CyberpunkTypography.body(13).weight(.medium))
                     .foregroundStyle(CyberpunkColors.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 Text("Scan thresholds & privacy")
                     .font(CyberpunkTypography.body(10))
                     .foregroundStyle(CyberpunkColors.textMuted)
                     .lineLimit(1)
+                    .truncationMode(.tail)
             }
 
-            Spacer()
+            Spacer(minLength: 4)
+
+            Color.clear
+                .frame(width: 12, height: 6)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(isSelected ? CyberpunkColors.accentDim : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .padding(.horizontal, AppLayout.sidebarRowHorizontal)
+        .padding(.vertical, AppLayout.sidebarRowVertical)
+        .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+        .listRowBackground(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? CyberpunkColors.accentDim : Color.clear)
+        )
+        .listRowSeparator(.hidden)
         .animation(
             CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
             value: isSelected
@@ -186,7 +245,7 @@ struct CategoryListView: View {
             ForEach(CategoryGroup.allCases) { group in
                 let categories = CleanupCategory.all.filter { $0.group == group }
                 if !categories.isEmpty {
-                    Section(group.rawValue) {
+                    Section {
                         ForEach(categories) { category in
                             CategoryRowView(
                                 category: category,
@@ -197,17 +256,23 @@ struct CategoryListView: View {
                             )
                             .tag(SidebarSelection.category(category.id))
                         }
+                    } header: {
+                        SidebarSectionHeader(title: group.rawValue)
                     }
                 }
             }
 
-            Section("App") {
+            Section {
                 SettingsRowView(isSelected: appState.sidebarSelection == .settings)
                     .tag(SidebarSelection.settings)
+            } header: {
+                SidebarSectionHeader(title: "App")
             }
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
+        .scrollIndicators(.automatic)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(CyberpunkColors.bgSecondary)
     }
 }

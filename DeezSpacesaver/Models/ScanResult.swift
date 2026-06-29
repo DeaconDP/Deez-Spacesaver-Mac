@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 enum RiskLevel: String, Codable, CaseIterable, Comparable {
     case safe
@@ -37,7 +38,7 @@ struct ScannableItem: Identifiable, Hashable, Codable {
     let detail: String?
 
     init(
-        id: UUID = UUID(),
+        id: UUID? = nil,
         path: String,
         name: String? = nil,
         sizeBytes: Int64,
@@ -46,7 +47,7 @@ struct ScannableItem: Identifiable, Hashable, Codable {
         riskLevel: RiskLevel = .safe,
         detail: String? = nil
     ) {
-        self.id = id
+        self.id = id ?? ScannableItem.stableID(for: path)
         self.path = path
         self.name = name ?? (path as NSString).lastPathComponent
         self.sizeBytes = sizeBytes
@@ -60,6 +61,17 @@ struct ScannableItem: Identifiable, Hashable, Codable {
 extension ScannableItem {
     var sortableModifiedDate: Date {
         modifiedDate ?? .distantPast
+    }
+
+    static func stableID(for path: String) -> UUID {
+        let digest = SHA256.hash(data: Data(path.utf8))
+        let bytes = Array(digest.prefix(16))
+        return UUID(uuid: (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        ))
     }
 }
 

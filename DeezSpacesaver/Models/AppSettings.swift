@@ -3,11 +3,13 @@ import Foundation
 struct ScanSettings: Sendable {
     let largeFileThresholdBytes: Int64
     let downloadsMinAgeDays: Int
+    let unusedAppsMinDays: Int
     let excludePaths: [String]
 
     static let `default` = ScanSettings(
         largeFileThresholdBytes: 500 * 1_024 * 1_024,
         downloadsMinAgeDays: 30,
+        unusedAppsMinDays: 90,
         excludePaths: []
     )
 }
@@ -24,6 +26,10 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(downloadsMinAgeDays, forKey: Keys.downloadsMinAgeDays) }
     }
 
+    @Published var unusedAppsMinDays: Int {
+        didSet { UserDefaults.standard.set(unusedAppsMinDays, forKey: Keys.unusedAppsMinDays) }
+    }
+
     @Published var excludePaths: [String] {
         didSet { saveExcludePaths() }
     }
@@ -35,6 +41,7 @@ final class AppSettings: ObservableObject {
     private enum Keys {
         static let largeFileThresholdMB = "largeFileThresholdMB"
         static let downloadsMinAgeDays = "downloadsMinAgeDays"
+        static let unusedAppsMinDays = "unusedAppsMinDays"
         static let excludePaths = "excludePaths"
         static let hasSeenFDAOnboarding = "hasSeenFDAOnboarding"
     }
@@ -43,6 +50,7 @@ final class AppSettings: ObservableObject {
         let defaults = UserDefaults.standard
         largeFileThresholdMB = defaults.object(forKey: Keys.largeFileThresholdMB) as? Int ?? 500
         downloadsMinAgeDays = defaults.object(forKey: Keys.downloadsMinAgeDays) as? Int ?? 30
+        unusedAppsMinDays = defaults.object(forKey: Keys.unusedAppsMinDays) as? Int ?? 90
         hasSeenFDAOnboarding = defaults.bool(forKey: Keys.hasSeenFDAOnboarding)
         excludePaths = Self.loadExcludePaths()
     }
@@ -55,6 +63,7 @@ final class AppSettings: ObservableObject {
         ScanSettings(
             largeFileThresholdBytes: largeFileThresholdBytes,
             downloadsMinAgeDays: downloadsMinAgeDays,
+            unusedAppsMinDays: unusedAppsMinDays,
             excludePaths: excludePaths
         )
     }

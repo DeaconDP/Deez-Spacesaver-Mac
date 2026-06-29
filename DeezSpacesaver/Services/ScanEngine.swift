@@ -33,9 +33,10 @@ final class ScanEngine: ObservableObject {
 
         statuses[categoryID] = .scanning(progress: nil, message: "Starting…")
         let reporter = ScanProgressReporter { [weak self] progress, message in
-            Task { @MainActor in
-                self?.statuses[categoryID] = .scanning(progress: progress, message: message)
-                self?.updateScanAllAggregate()
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                statuses[categoryID] = .scanning(progress: progress, message: message)
+                updateScanAllAggregate()
             }
         }
 

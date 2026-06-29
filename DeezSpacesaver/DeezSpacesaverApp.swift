@@ -9,8 +9,10 @@ struct DeezSpacesaverApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .frame(minWidth: 900, minHeight: 650)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .defaultSize(width: 1100, height: 750)
+        .windowResizability(.contentMinSize)
         .windowStyle(.titleBar)
         .commands {
             CommandGroup(replacing: .newItem) {}

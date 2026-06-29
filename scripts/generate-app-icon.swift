@@ -2,9 +2,21 @@
 import AppKit
 import Foundation
 
-let outputDir = CommandLine.arguments.count > 1
-    ? CommandLine.arguments[1]
-    : "DeezSpacesaver/Assets.xcassets/AppIcon.appiconset"
+let repoRoot = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+
+let defaultSource = repoRoot
+    .appendingPathComponent("scripts/icon-source-1024.png")
+let defaultOutput = repoRoot
+    .appendingPathComponent("DeezSpacesaver/Assets.xcassets/AppIcon.appiconset")
+
+let sourceURL = CommandLine.arguments.count > 1
+    ? URL(fileURLWithPath: CommandLine.arguments[1])
+    : defaultSource
+let outputDir = CommandLine.arguments.count > 2
+    ? URL(fileURLWithPath: CommandLine.arguments[2])
+    : defaultOutput
 
 let sizes: [(name: String, pixels: Int)] = [
     ("icon_16x16.png", 16),
@@ -19,69 +31,94 @@ let sizes: [(name: String, pixels: Int)] = [
     ("icon_512x512@2x.png", 1024),
 ]
 
+// macOS icon grid on a 1024 master (matches system app geometry on Tahoe+).
+private let masterCanvas: CGFloat = 1024
+private let masterBodyInset: CGFloat = 100 // (1024 - 824) / 2
+private let masterCornerRadius: CGFloat = 185.4
 
-func drawUnicodeSymbol(in context: CGContext, size: CGFloat) {
-    // U+25A4 ▤ — stacked reads as database / storage layers
-    let symbol = String(repeating: "\u{25A4}\n", count: 3).trimmingCharacters(in: .newlines)
-    let fontSize = size * 0.22
-    let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .medium)
-    let paragraph = NSMutableParagraphStyle()
-    paragraph.alignment = .center
-    paragraph.lineSpacing = size * 0.02
-    let attributes: [NSAttributedString.Key: Any] = [
-        .font: font,
-        .foregroundColor: NSColor.white,
-        .paragraphStyle: paragraph,
-    ]
-    let text = NSAttributedString(string: symbol, attributes: attributes)
-    let textSize = text.size()
-    let point = CGPoint(
-        x: (size - textSize.width) / 2,
-        y: (size - textSize.height) / 2
-    )
-    let nsContext = NSGraphicsContext(cgContext: context, flipped: false)
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = nsContext
-    text.draw(at: point)
-    NSGraphicsContext.restoreGraphicsState()
+guard let sourceImage = NSImage(contentsOf: sourceURL) else {
+    fputs("error: could not load source icon at \(sourceURL.path)\n", stderr)
+    exit(1)
 }
 
-func renderIcon(pixels: Int, to url: URL) throws {
+guard let sourceRep = sourceImage.representations.max(by: {
+    ($0.pixelsWide * $0.pixelsHigh) < ($1.pixelsWide * $1.pixelsHigh)
+}) else {
+    fputs("error: source icon has no bitmap representations\n", stderr)
+    exit(1)
+}
+
+func macOSIconBodyRect(forCanvas size: CGFloat) -> (body: NSRect, cornerRadius: CGFloat) {
+    let scale = size / masterCanvas
+    let inset = masterBodyInset * scale
+    let bodySize = size - inset * 2
+    let cornerRadius = masterCornerRadius * scale
+    return (NSRect(x: inset, y: inset, width: bodySize, height: bodySize), cornerRadius)
+}
+
+func resizeIcon(pixels: Int) throws -> Data {
     let size = CGFloat(pixels)
-    guard let context = CGContext(
-        data: nil,
-        width: pixels,
-        height: pixels,
-        bitsPerComponent: 8,
+    guard let bitmap = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: pixels,
+        pixelsHigh: pixels,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
         bytesPerRow: 0,
-        space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        bitsPerPixel: 0
     ) else {
-        throw NSError(domain: "IconGen", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create context"])
+        throw NSError(domain: "IconGen", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create bitmap"])
     }
 
-    context.setFillColor(NSColor.black.cgColor)
-    context.fill(CGRect(x: 0, y: 0, width: size, height: size))
+    let canvas = NSRect(x: 0, y: 0, width: size, height: size)
+    let geometry = macOSIconBodyRect(forCanvas: size)
 
-    drawUnicodeSymbol(in: context, size: size)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
 
-    guard let image = context.makeImage() else {
-        throw NSError(domain: "IconGen", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to make image"])
+    NSColor.clear.setFill()
+    NSBezierPath(rect: canvas).fill()
+
+    // Soft system shadow so the icon matches native apps on the Dock/Launchpad grid.
+    NSGraphicsContext.current?.saveGraphicsState()
+    let shadow = NSShadow()
+    shadow.shadowColor = NSColor.black.withAlphaComponent(0.5)
+    shadow.shadowOffset = NSSize(width: 0, height: -12 * (size / masterCanvas))
+    shadow.shadowBlurRadius = 28 * (size / masterCanvas)
+    shadow.set()
+
+    let bodyPath = NSBezierPath(roundedRect: geometry.body, xRadius: geometry.cornerRadius, yRadius: geometry.cornerRadius)
+    NSColor.black.setFill()
+    bodyPath.fill()
+    NSGraphicsContext.current?.restoreGraphicsState()
+
+    NSGraphicsContext.current?.saveGraphicsState()
+    bodyPath.addClip()
+    sourceImage.draw(
+        in: canvas,
+        from: NSRect(x: 0, y: 0, width: sourceRep.pixelsWide, height: sourceRep.pixelsHigh),
+        operation: .copy,
+        fraction: 1
+    )
+    NSGraphicsContext.current?.restoreGraphicsState()
+
+    NSGraphicsContext.restoreGraphicsState()
+
+    guard let png = bitmap.representation(using: .png, properties: [:]) else {
+        throw NSError(domain: "IconGen", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to encode PNG"])
     }
-
-    let rep = NSBitmapImageRep(cgImage: image)
-    guard let png = rep.representation(using: .png, properties: [:]) else {
-        throw NSError(domain: "IconGen", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to encode PNG"])
-    }
-    try png.write(to: url)
+    return png
 }
 
-let outURL = URL(fileURLWithPath: outputDir, isDirectory: true)
-try FileManager.default.createDirectory(at: outURL, withIntermediateDirectories: true)
+try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
 
 for entry in sizes {
-    let fileURL = outURL.appendingPathComponent(entry.name)
-    try renderIcon(pixels: entry.pixels, to: fileURL)
+    let fileURL = outputDir.appendingPathComponent(entry.name)
+    let png = try resizeIcon(pixels: entry.pixels)
+    try png.write(to: fileURL)
     print("Wrote \(fileURL.path)")
 }
 

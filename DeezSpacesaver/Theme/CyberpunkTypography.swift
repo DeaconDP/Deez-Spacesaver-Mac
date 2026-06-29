@@ -12,6 +12,10 @@ enum CyberpunkTypography {
     static func mono(_ size: CGFloat = 11) -> Font {
         .system(size: size, design: .monospaced)
     }
+
+    static func sectionLabel(_ size: CGFloat = 10) -> Font {
+        .system(size: size, weight: .semibold)
+    }
 }
 
 struct CyberpunkPanel: ViewModifier {
@@ -43,7 +47,7 @@ struct CyberpunkPrimaryButton: ButtonStyle {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(CyberpunkColors.accent.opacity(configuration.isPressed ? 0.75 : 1))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: CyberpunkColors.controlRadius))
                 .shadow(color: CyberpunkColors.accentGlow, radius: configuration.isPressed ? 2 : 6)
                 .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
                 .opacity(isEnabled ? 1 : 0.45)
@@ -73,10 +77,10 @@ struct CyberpunkSecondaryButton: ButtonStyle {
                 .padding(.vertical, 8)
                 .background(CyberpunkColors.accentDim)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: CyberpunkColors.controlRadius)
                         .stroke(CyberpunkColors.borderAccent, lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: CyberpunkColors.controlRadius))
                 .opacity((configuration.isPressed ? 0.8 : 1) * (isEnabled ? 1 : 0.45))
                 .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
                 .animation(
@@ -95,8 +99,7 @@ struct CyberpunkLoadingLabel: View {
     var body: some View {
         HStack(spacing: 8) {
             if isLoading {
-                ProgressView()
-                    .scaleEffect(0.65)
+                CyberpunkPulseDot()
                     .transition(.opacity.combined(with: .scale))
             }
             Text(title)

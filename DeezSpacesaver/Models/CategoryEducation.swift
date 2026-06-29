@@ -42,9 +42,9 @@ struct CategoryEducation {
         ),
         CleanupCategory.appUninstall.id: CategoryEducation(
             overview: "Removing apps you no longer use frees the app bundle plus related support files scattered in Library folders.",
-            whatItFinds: ".app bundles in /Applications, plus related paths: Application Support, Containers, Preferences, and Caches for each app",
+            whatItFinds: "Unused .app bundles in /Applications (including nested folders) and ~/Applications, filtered by last-launch date (or bundle modification date when no launch record exists). Related paths: Application Support (by name and bundle ID), Containers, Preferences, Caches, Logs, WebKit, HTTPStorages, and Saved Application State. Apple system apps (com.apple.*) are excluded.",
             onCleanup: "Moves app bundle and all related support paths to Trash.",
-            considerations: "Deleting an app removes its data. Reinstalling may not restore settings. Review each app carefully."
+            considerations: "Threshold adjustable in Settings (default 90 days). Deleting an app removes its data. Reinstalling may not restore settings. Review each app carefully."
         ),
         CleanupCategory.iosBackups.id: CategoryEducation(
             overview: "Each iPhone/iPad backup can be many gigabytes. Old device backups are often the largest reclaimable Apple data on a Mac.",

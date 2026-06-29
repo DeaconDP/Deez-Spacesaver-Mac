@@ -20,6 +20,9 @@ fi
 echo "→ Regenerating Xcode project"
 python3 "$ROOT/scripts/generate-xcodeproj.py"
 
+echo "→ Regenerating app icons"
+swift "$ROOT/scripts/generate-app-icon.swift"
+
 echo "→ Building DeezSpacesaver ($CONFIGURATION)"
 xcodebuild \
   -project DeezSpacesaver.xcodeproj \
@@ -31,5 +34,11 @@ xcodebuild \
 mkdir -p "$DIST"
 rm -rf "$DIST/DeezSpacesaver.app"
 cp -R "$PRODUCT" "$DIST/DeezSpacesaver.app"
+touch "$DIST/DeezSpacesaver.app"
+
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
+if [[ -x "$LSREGISTER" ]]; then
+  "$LSREGISTER" -f -R -trusted "$DIST/DeezSpacesaver.app" >/dev/null
+fi
 
 echo "→ Built: $DIST/DeezSpacesaver.app"

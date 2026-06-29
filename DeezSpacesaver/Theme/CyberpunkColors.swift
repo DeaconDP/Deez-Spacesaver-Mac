@@ -25,4 +25,34 @@ enum CyberpunkColors {
 
     static let borderSubtle = Color.white.opacity(0.07)
     static let borderAccent = Color(red: 0, green: 229/255, blue: 1).opacity(0.32)
+
+    static let cardRadius: CGFloat = 12
+    static let barHeight: CGFloat = 8
+    static let controlRadius: CGFloat = 8
+
+    static var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [accent, accentSecondary],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    static var cardTopAccent: LinearGradient {
+        LinearGradient(
+            colors: [accent.opacity(0.15), accentSecondary.opacity(0.15)],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+}
+
+enum AppLayout {
+    static let edge: CGFloat = 16
+    static let compactEdge: CGFloat = 10
+    static let sidebarHorizontal: CGFloat = 12
+    static let content: CGFloat = 20
+    static let sidebarRowVertical: CGFloat = 10
+    static let sidebarRowHorizontal: CGFloat = 10
+    static let sidebarSectionSpacing: CGFloat = 8
 }

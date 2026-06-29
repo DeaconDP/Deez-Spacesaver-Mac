@@ -56,26 +56,21 @@ struct CyberpunkFeedbackBanner: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: banner.style.icon)
-                .foregroundStyle(banner.style.foreground)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                bannerIcon
+                bannerMessage
+                Spacer(minLength: 8)
+                dismissButton
+            }
 
-            Text(banner.message)
-                .font(CyberpunkTypography.body(12))
-                .foregroundStyle(CyberpunkColors.textPrimary)
-                .lineLimit(2)
-
-            Spacer(minLength: 8)
-
-            if let onDismiss {
-                Button {
-                    onDismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(CyberpunkColors.textMuted)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    bannerIcon
+                    bannerMessage
                 }
-                .buttonStyle(.plain)
+                dismissButton
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .padding(.horizontal, 14)
@@ -87,5 +82,32 @@ struct CyberpunkFeedbackBanner: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .transition(bannerTransition)
+    }
+
+    private var bannerIcon: some View {
+        Image(systemName: banner.style.icon)
+            .foregroundStyle(banner.style.foreground)
+    }
+
+    private var bannerMessage: some View {
+        Text(banner.message)
+            .font(CyberpunkTypography.body(12))
+            .foregroundStyle(CyberpunkColors.textPrimary)
+            .fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
+    }
+
+    @ViewBuilder
+    private var dismissButton: some View {
+        if let onDismiss {
+            Button {
+                onDismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(CyberpunkColors.textMuted)
+            }
+            .buttonStyle(.plain)
+        }
     }
 }

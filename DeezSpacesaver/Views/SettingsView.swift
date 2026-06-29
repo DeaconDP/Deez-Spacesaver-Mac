@@ -19,14 +19,14 @@ struct SettingsView: View {
                 }
                 Spacer()
             }
-            .padding(16)
+            .padding(AppLayout.edge)
             .background(CyberpunkColors.bgSecondary)
 
             if let banner = appState.feedbackBanner {
                 CyberpunkFeedbackBanner(banner: banner) {
                     appState.dismissFeedback()
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, AppLayout.edge)
                 .padding(.top, 8)
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
@@ -44,18 +44,38 @@ struct SettingsView: View {
                         value: $settings.downloadsMinAgeDays,
                         in: 1...365
                     )
+                    Stepper(
+                        "Unused apps min age: \(settings.unusedAppsMinDays) days",
+                        value: $settings.unusedAppsMinDays,
+                        in: 7...730
+                    )
                 }
 
                 Section("Excluded Paths") {
                     ForEach(settings.excludePaths, id: \.self) { path in
-                        HStack {
-                            Text(path)
-                                .font(CyberpunkTypography.mono(11))
-                            Spacer()
-                            Button("Remove") {
-                                settings.removeExcludePath(path)
+                        ViewThatFits(in: .horizontal) {
+                            HStack {
+                                Text(path)
+                                    .font(CyberpunkTypography.mono(11))
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .layoutPriority(1)
+                                Spacer(minLength: 8)
+                                Button("Remove") {
+                                    settings.removeExcludePath(path)
+                                }
+                                .buttonStyle(CyberpunkSecondaryButton())
                             }
-                            .buttonStyle(CyberpunkSecondaryButton())
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(path)
+                                    .font(CyberpunkTypography.mono(11))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Button("Remove") {
+                                    settings.removeExcludePath(path)
+                                }
+                                .buttonStyle(CyberpunkSecondaryButton())
+                            }
                         }
                         .transition(.opacity.combined(with: .move(edge: .leading)))
                     }

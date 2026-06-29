@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify (build + test)
+        run: ./scripts/verify.sh
+
       - name: Build release app and DMG
         run: |
           chmod +x scripts/build-app.sh scripts/create-dmg.sh scripts/build-release.sh

@@ -77,11 +77,11 @@ DMG, PKG, and ISO files are safe to remove after you've finished installing — 
 
 **Unused Apps** — Caution
 
-Removing apps you no longer use frees the app bundle plus related support files scattered in Library folders.
+Apps you have not opened recently, plus their support files scattered in Library folders.
 
-- **Finds:** App bundles in Applications, plus related Application Support, Containers, Preferences, and Caches
+- **Finds:** Unused apps in /Applications (including nested folders) and ~/Applications, filtered by last-launch age (default 90 days). Includes Application Support, Containers, Preferences, Caches, Logs, and other related Library paths. Apple system apps are excluded.
 - **Cleanup:** Moves app and all related support paths to Trash
-- **Note:** Deleting an app removes its data. Reinstalling may not restore settings.
+- **Note:** Deleting an app removes its data. Reinstalling may not restore settings. Threshold adjustable in Settings.
 
 #### Apple
 
@@ -217,7 +217,7 @@ macOS swap files and temporary system caches accumulate during long uptime. A re
 
 ### Requirements
 
-- macOS 14+
+- macOS 14.4+
 - Xcode 15+
 
 ### One-click run (from source)
@@ -240,6 +240,20 @@ python3 scripts/generate-xcodeproj.py
 ```
 
 ### Test
+
+```bash
+./scripts/verify.sh
+```
+
+This regenerates the Xcode project, builds, and runs unit tests — the same steps CI runs.
+
+Install a pre-push hook so broken builds are caught before they reach GitHub:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+Or run tests only:
 
 ```bash
 xcodebuild -project DeezSpacesaver.xcodeproj -scheme DeezSpacesaver -configuration Debug -derivedDataPath build/DerivedData test

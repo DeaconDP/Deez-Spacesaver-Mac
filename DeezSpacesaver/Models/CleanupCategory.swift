@@ -23,7 +23,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let trash = CleanupCategory(
         id: "trash",
         name: "Empty Trash",
-        description: "Items already in Trash waiting to be permanently removed.",
+        description: "Files already in Trash still use disk space until permanently removed.",
         group: .quickWins,
         systemImage: "trash",
         requiresFullDiskAccess: false,
@@ -34,7 +34,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let downloads = CleanupCategory(
         id: "downloads",
         name: "Downloads",
-        description: "Large or old files in your Downloads folder.",
+        description: "Large installers, archives, and forgotten files in your Downloads folder.",
         group: .quickWins,
         systemImage: "arrow.down.circle",
         requiresFullDiskAccess: false,
@@ -45,7 +45,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let largeFiles = CleanupCategory(
         id: "largeFiles",
         name: "Large Files",
-        description: "Files over your size threshold in common locations.",
+        description: "Big files above your size threshold in Documents, Desktop, and other common folders.",
         group: .quickWins,
         systemImage: "doc.fill.badge.ellipsis",
         requiresFullDiskAccess: false,
@@ -56,7 +56,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let iosBackups = CleanupCategory(
         id: "iosBackups",
         name: "iOS Backups",
-        description: "Old iPhone and iPad backup folders.",
+        description: "iPhone and iPad backups that can be many gigabytes each.",
         group: .apple,
         systemImage: "iphone",
         requiresFullDiskAccess: false,
@@ -67,7 +67,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let timeMachineSnapshots = CleanupCategory(
         id: "timeMachineSnapshots",
         name: "Time Machine Snapshots",
-        description: "Local Time Machine snapshots on your startup disk.",
+        description: "Local restore points macOS keeps on your startup disk between full backups.",
         group: .system,
         systemImage: "clock.arrow.circlepath",
         requiresFullDiskAccess: false,
@@ -78,7 +78,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let userCaches = CleanupCategory(
         id: "userCaches",
         name: "App Caches",
-        description: "Regeneratable cache files in ~/Library/Caches.",
+        description: "Temporary cache files apps recreate automatically — safe to clear for space.",
         group: .system,
         systemImage: "memorychip",
         requiresFullDiskAccess: false,
@@ -89,7 +89,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let browserCaches = CleanupCategory(
         id: "browserCaches",
         name: "Browser Caches",
-        description: "Safari, Chrome, Firefox, and Edge cache data.",
+        description: "Cached pages and assets from Safari, Chrome, Firefox, and Edge.",
         group: .system,
         systemImage: "globe",
         requiresFullDiskAccess: true,
@@ -100,7 +100,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let installers = CleanupCategory(
         id: "installers",
         name: "Installer Artifacts",
-        description: "Leftover .dmg, .pkg, and .iso files.",
+        description: "DMG, PKG, and ISO files left over after you've finished installing apps.",
         group: .quickWins,
         systemImage: "shippingbox",
         requiresFullDiskAccess: false,
@@ -111,7 +111,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let logs = CleanupCategory(
         id: "logs",
         name: "Log Files",
-        description: "Application and diagnostic logs.",
+        description: "Application and diagnostic logs that grow over time and are rarely needed.",
         group: .system,
         systemImage: "doc.text",
         requiresFullDiskAccess: false,
@@ -122,7 +122,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let appUninstall = CleanupCategory(
         id: "appUninstall",
         name: "Unused Apps",
-        description: "Applications and leftover support files.",
+        description: "Apps not opened recently, plus their support files scattered in Library folders.",
         group: .quickWins,
         systemImage: "app.badge.minus",
         requiresFullDiskAccess: false,
@@ -133,7 +133,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let xcodeDerivedData = CleanupCategory(
         id: "xcodeDerivedData",
         name: "Xcode Derived Data",
-        description: "Build artifacts regenerated on next compile.",
+        description: "Xcode's build cache — intermediate compile files regenerated on the next build.",
         group: .developer,
         systemImage: "hammer",
         requiresFullDiskAccess: false,
@@ -144,7 +144,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let xcodeDeviceSupport = CleanupCategory(
         id: "xcodeDeviceSupport",
         name: "iOS Device Support",
-        description: "Old device debugging symbols from Xcode.",
+        description: "Debugging symbols Xcode downloaded for iOS versions you no longer test against.",
         group: .developer,
         systemImage: "iphone.gen3",
         requiresFullDiskAccess: false,
@@ -155,7 +155,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let xcodeArchives = CleanupCategory(
         id: "xcodeArchives",
         name: "Xcode Archives",
-        description: "Saved .xcarchive build exports.",
+        description: "Saved release builds from Xcode for TestFlight and App Store submission.",
         group: .developer,
         systemImage: "archivebox",
         requiresFullDiskAccess: false,
@@ -166,7 +166,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let simulators = CleanupCategory(
         id: "simulators",
         name: "iOS Simulators",
-        description: "Unavailable simulator devices and data.",
+        description: "Orphaned simulator runtimes and device data that can be re-downloaded from Xcode.",
         group: .developer,
         systemImage: "display",
         requiresFullDiskAccess: false,
@@ -177,7 +177,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let packageManagers = CleanupCategory(
         id: "packageManagers",
         name: "Package Manager Caches",
-        description: "Homebrew, npm, pip, and Docker cache data.",
+        description: "Downloaded packages cached by Homebrew, npm, pip, Yarn, and Docker.",
         group: .developer,
         systemImage: "cube.box",
         requiresFullDiskAccess: false,
@@ -188,7 +188,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let mailAttachments = CleanupCategory(
         id: "mailAttachments",
         name: "Mail Attachments",
-        description: "Downloaded Mail attachment caches.",
+        description: "Attachment files Mail cached locally — they re-download when you open messages.",
         group: .apple,
         systemImage: "envelope",
         requiresFullDiskAccess: true,
@@ -199,7 +199,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let messagesAttachments = CleanupCategory(
         id: "messagesAttachments",
         name: "Messages Attachments",
-        description: "Photos, videos, and files from Messages.",
+        description: "Photos, videos, and files Messages stores locally that may re-download from iCloud.",
         group: .apple,
         systemImage: "message",
         requiresFullDiskAccess: true,
@@ -210,7 +210,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let iCloudOptimize = CleanupCategory(
         id: "iCloudOptimize",
         name: "iCloud Optimize Storage",
-        description: "Open System Settings to enable iCloud storage optimization.",
+        description: "Store older files in iCloud and keep recent ones local to free disk space.",
         group: .guided,
         systemImage: "icloud",
         requiresFullDiskAccess: false,
@@ -221,7 +221,7 @@ struct CleanupCategory: Identifiable, Hashable {
     static let systemRestart = CleanupCategory(
         id: "systemRestart",
         name: "System Maintenance",
-        description: "Restart recommendations for swap and temp file recovery.",
+        description: "Restarting clears swap files and temp caches, often recovering 5–15 GB.",
         group: .guided,
         systemImage: "arrow.clockwise",
         requiresFullDiskAccess: false,

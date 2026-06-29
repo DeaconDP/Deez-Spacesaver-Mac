@@ -8,97 +8,21 @@ struct DashboardView: View {
         .move(edge: .top).combined(with: .opacity)
     }
 
+    private var reclaimableBytes: Int64 {
+        appState.scanEngine.totalReclaimableBytes
+    }
+
+    private var reclaimableAccent: Color {
+        ByteFormatting.reclaimableColor(for: reclaimableBytes)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            HStack(alignment: .top, spacing: 32) {
-                StorageGaugeView(stats: appState.diskStats)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("DeezSpacesaver")
-                        .font(CyberpunkTypography.display(24))
-                        .foregroundStyle(CyberpunkColors.textPrimary)
-
-                    Text("Scan, review, and reclaim disk space safely.")
-                        .font(CyberpunkTypography.body(14))
-                        .foregroundStyle(CyberpunkColors.textSecondary)
-
-                    HStack(spacing: 12) {
-                        StatPill(
-                            label: "Available",
-                            value: ByteFormatting.string(for: appState.diskStats.availableBytes),
-                            accent: CyberpunkColors.accent
-                        )
-                        StatPill(
-                            label: "Used",
-                            value: ByteFormatting.string(for: appState.diskStats.usedBytes),
-                            accent: CyberpunkColors.accentSecondary
-                        )
-                        StatPill(
-                            label: "Reclaimable",
-                            value: ByteFormatting.string(for: appState.scanEngine.totalReclaimableBytes),
-                            accent: CyberpunkColors.accentWarn
-                        )
-                    }
-
-                    HStack(spacing: 12) {
-                        Button {
-                            appState.scanAll()
-                        } label: {
-                            CyberpunkLoadingLabel(
-                                isLoading: appState.scanEngine.isScanningAll,
-                                title: appState.scanEngine.isScanningAll ? "Scanning All…" : "Scan All Categories"
-                            )
-                        }
-                        .buttonStyle(CyberpunkPrimaryButton())
-                        .disabled(appState.scanEngine.isScanningAll)
-
-                        Button {
-                            Task { await appState.refreshDiskStatsAsync() }
-                        } label: {
-                            CyberpunkLoadingLabel(
-                                isLoading: appState.isRefreshingDiskStats,
-                                title: appState.isRefreshingDiskStats ? "Refreshing…" : "Refresh Disk Stats"
-                            )
-                        }
-                        .buttonStyle(CyberpunkSecondaryButton())
-                        .disabled(appState.isRefreshingDiskStats)
-                    }
-
-                    if !appState.hasFullDiskAccess {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.shield")
-                                .foregroundStyle(CyberpunkColors.accentWarn)
-                            Text("Grant Full Disk Access for Mail, Messages, and browser cache scanning.")
-                                .font(CyberpunkTypography.body(12))
-                                .foregroundStyle(CyberpunkColors.textSecondary)
-                            Button("Add Full Disk Access") {
-                                appState.beginFullDiskAccessSetup()
-                            }
-                            .buttonStyle(CyberpunkSecondaryButton())
-                            Button {
-                                Task { await appState.checkFullDiskAccessAsync() }
-                            } label: {
-                                CyberpunkLoadingLabel(
-                                    isLoading: appState.isCheckingFDA,
-                                    title: appState.isCheckingFDA ? "Checking…" : "Check Again"
-                                )
-                            }
-                            .buttonStyle(CyberpunkSecondaryButton())
-                            .disabled(appState.isCheckingFDA)
-                        }
-                        .padding(12)
-                        .background(CyberpunkColors.accentWarn.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .transition(bannerTransition)
-                    }
-                }
-
-                Spacer()
-            }
-            .animation(
-                CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
-                value: appState.hasFullDiskAccess
-            )
+        VStack(alignment: .leading, spacing: 16) {
+            heroSection
+                .animation(
+                    CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
+                    value: appState.hasFullDiskAccess
+                )
 
             if appState.scanEngine.isScanningAll {
                 ScanProgressView(
@@ -106,15 +30,198 @@ struct DashboardView: View {
                     message: appState.scanEngine.scanAllMessage ?? "Scanning all categories…",
                     label: "Scan All Progress"
                 )
-                .transition(.opacity.combined(with: .offset(y: 4)))
+                .padding(.horizontal, AppLayout.compactEdge)
+                .padding(.top, 4)
+                .transition(.opacity)
+                .animation(
+                    CyberpunkAnimation.apply(CyberpunkAnimation.quick, reduceMotion: reduceMotion),
+                    value: appState.scanEngine.isScanningAll
+                )
             }
         }
-        .animation(
-            CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
-            value: appState.scanEngine.isScanningAll
-        )
-        .padding(24)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(CyberpunkColors.bgPrimary)
+    }
+
+    private var heroSection: some View {
+        DashboardHeroCard {
+            VStack(alignment: .leading, spacing: 20) {
+                sectionHeader
+                heroMetric
+                storageSection
+                metricStrip
+                actionToolbar
+
+                if !appState.hasFullDiskAccess {
+                    fdaCallout
+                        .transition(bannerTransition)
+                }
+            }
+        }
+    }
+
+    private var sectionHeader: some View {
+        HStack(spacing: 8) {
+            Text("Storage Overview")
+                .font(CyberpunkTypography.sectionLabel(11))
+                .foregroundStyle(CyberpunkColors.textMuted)
+                .textCase(.uppercase)
+                .tracking(0.6)
+
+            if appState.scanEngine.isScanningAll {
+                CyberpunkPulseDot()
+                    .transition(.opacity.combined(with: .scale))
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var heroMetric: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Reclaimable from last scan")
+                .font(CyberpunkTypography.body(12))
+                .foregroundStyle(CyberpunkColors.textSecondary)
+
+            Text(ByteFormatting.string(for: reclaimableBytes))
+                .font(CyberpunkTypography.display(30))
+                .foregroundStyle(reclaimableAccent)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .contentTransition(.numericText())
+                .animation(
+                    CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
+                    value: reclaimableBytes
+                )
+        }
+    }
+
+    private var storageSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            StorageCapacityBar(stats: appState.diskStats)
+
+            Text(capacityCaption)
+                .font(CyberpunkTypography.body(12))
+                .foregroundStyle(CyberpunkColors.textMuted)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+        }
+    }
+
+    private var capacityCaption: String {
+        let available = ByteFormatting.string(for: appState.diskStats.availableBytes)
+        let used = ByteFormatting.string(for: appState.diskStats.usedBytes)
+        let total = ByteFormatting.string(for: appState.diskStats.totalBytes)
+        return "\(available) available · \(used) used · \(total) total"
+    }
+
+    private var metricStrip: some View {
+        DashboardMetricStrip(
+            available: ByteFormatting.string(for: appState.diskStats.availableBytes),
+            used: ByteFormatting.string(for: appState.diskStats.usedBytes),
+            reclaimable: ByteFormatting.string(for: reclaimableBytes),
+            reclaimableAccent: reclaimableAccent
+        )
+    }
+
+    private var actionToolbar: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                scanAllButton
+                refreshButton
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                scanAllButton
+                refreshButton
+            }
+        }
+    }
+
+    private var scanAllButton: some View {
+        Button {
+            appState.scanAll()
+        } label: {
+            CyberpunkLoadingLabel(
+                isLoading: appState.scanEngine.isScanningAll,
+                title: appState.scanEngine.isScanningAll ? "Scanning All…" : "Scan All Categories"
+            )
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .buttonStyle(CyberpunkPrimaryButton())
+        .disabled(appState.scanEngine.isScanningAll)
+    }
+
+    private var refreshButton: some View {
+        Button {
+            Task { await appState.refreshDiskStatsAsync() }
+        } label: {
+            HStack(spacing: 6) {
+                if appState.isRefreshingDiskStats {
+                    CyberpunkPulseDot()
+                } else {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                Text(appState.isRefreshingDiskStats ? "Refreshing…" : "Refresh")
+                    .contentTransition(.opacity)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .buttonStyle(CyberpunkSecondaryButton())
+        .disabled(appState.isRefreshingDiskStats)
+    }
+
+    private var fdaCallout: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 12) {
+                fdaMessage
+                Spacer(minLength: 8)
+                fdaButtons
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                fdaMessage
+                fdaButtons
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(CyberpunkColors.accentWarn.opacity(0.06))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(CyberpunkColors.borderSubtle, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var fdaMessage: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.shield")
+                .foregroundStyle(CyberpunkColors.accentWarn)
+            Text("Grant Full Disk Access for Mail, Messages, and browser cache scanning.")
+                .font(CyberpunkTypography.body(12))
+                .foregroundStyle(CyberpunkColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
+        }
+    }
+
+    private var fdaButtons: some View {
+        HStack(spacing: 8) {
+            Button("Add Full Disk Access") {
+                appState.beginFullDiskAccessSetup()
+            }
+            .buttonStyle(CyberpunkSecondaryButton())
+            Button {
+                Task { await appState.checkFullDiskAccessAsync() }
+            } label: {
+                CyberpunkLoadingLabel(
+                    isLoading: appState.isCheckingFDA,
+                    title: appState.isCheckingFDA ? "Checking…" : "Check Again"
+                )
+            }
+            .buttonStyle(CyberpunkSecondaryButton())
+            .disabled(appState.isCheckingFDA)
+        }
     }
 }

@@ -34,8 +34,8 @@ struct OnboardingView: View {
             CyberpunkAnimation.apply(CyberpunkAnimation.emphasis, reduceMotion: reduceMotion),
             value: step
         )
-        .padding(32)
-        .frame(width: 520)
+        .padding(AppLayout.edge)
+        .frame(minWidth: 320, idealWidth: 520, maxWidth: 560)
         .background(CyberpunkColors.bgPrimary)
     }
 

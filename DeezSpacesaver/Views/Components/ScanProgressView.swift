@@ -20,8 +20,7 @@ struct ScanProgressView: View {
                 ProgressView(value: progress)
                     .progressViewStyle(CyberpunkProgressStyle(pulseGlow: pulseGlow && !reduceMotion))
             } else {
-                ProgressView()
-                    .scaleEffect(0.9)
+                CyberpunkPulseDot(size: 8)
             }
 
             Text(message)
