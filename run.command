@@ -29,21 +29,11 @@ quit_app() {
   fi
 }
 
-if [[ ! -d "/Applications/Xcode.app/Contents/Developer" ]]; then
-  show_dialog "Xcode is required to build DeezSpacesaver from source. Download the ready-made app from the GitHub Releases page instead."
-  echo ""
-  echo "Press Enter to close..."
-  read
-  exit 1
-fi
-
-export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
-
 quit_app
 
 osascript -e 'display notification "Building DeezSpacesaver…" with title "DeezSpacesaver"' >/dev/null 2>&1 || true
 if ! "$ROOT/scripts/build-local.sh"; then
-  show_dialog "DeezSpacesaver could not be built. Try opening the project in Xcode, or download the app from GitHub Releases."
+  show_dialog "DeezSpacesaver could not be rebuilt, so the previous app was not opened. Review the build error in this window."
   echo ""
   echo "Press Enter to close..."
   read
@@ -71,4 +61,6 @@ if [[ $EXIT_CODE -ne 0 ]]; then
   exit $EXIT_CODE
 fi
 
-osascript -e 'tell application "Terminal" to close front window' 2>/dev/null || exit 0
+if [[ "${DEEZSPACESAVER_KEEP_TERMINAL_OPEN:-0}" != "1" ]]; then
+  osascript -e 'tell application "Terminal" to close front window' 2>/dev/null || exit 0
+fi

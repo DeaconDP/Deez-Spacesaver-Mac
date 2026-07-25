@@ -25,4 +25,19 @@ final class SafetyGuardTests: XCTestCase {
         XCTAssertFalse(SafetyGuard.canDelete(item: item, category: .downloads, excludePaths: []))
         XCTAssertTrue(SafetyGuard.canDelete(item: item, category: .appUninstall, excludePaths: []))
     }
+
+    func testApplicationBundleSafetyRejectsSymlinkEscape() throws {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: temporaryDirectory) }
+
+        let applicationsRoot = temporaryDirectory.appendingPathComponent("Applications", isDirectory: true)
+        let outsideApp = temporaryDirectory.appendingPathComponent("Outside.app", isDirectory: true)
+        let linkedApp = applicationsRoot.appendingPathComponent("Linked.app")
+        try FileManager.default.createDirectory(at: applicationsRoot, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: outsideApp, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: linkedApp, withDestinationURL: outsideApp)
+
+        XCTAssertFalse(SafetyGuard.isSafeApplicationBundle(linkedApp, under: applicationsRoot))
+    }
 }

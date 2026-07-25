@@ -224,6 +224,42 @@ struct SettingsRowView: View {
     }
 }
 
+struct ProjectSidebarRow: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: systemImage)
+                .frame(width: 20, height: 20)
+                .foregroundStyle(isSelected ? CyberpunkColors.accent : CyberpunkColors.textSecondary)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(CyberpunkTypography.body(13).weight(.medium))
+                    .foregroundStyle(CyberpunkColors.textPrimary)
+                    .lineLimit(1)
+                Text(subtitle)
+                    .font(CyberpunkTypography.body(10))
+                    .foregroundStyle(CyberpunkColors.textMuted)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 4)
+        }
+        .padding(.horizontal, AppLayout.sidebarRowHorizontal)
+        .padding(.vertical, AppLayout.sidebarRowVertical)
+        .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+        .listRowBackground(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? CyberpunkColors.accentDim : Color.clear)
+        )
+        .listRowSeparator(.hidden)
+    }
+}
+
 struct CategoryListView: View {
     @EnvironmentObject var appState: AppState
 
@@ -237,6 +273,12 @@ struct CategoryListView: View {
                     if let cat = CleanupCategory.byID(id) {
                         appState.selectCategory(cat)
                     }
+                case .appManager:
+                    appState.selectAppManager()
+                case .projects:
+                    appState.selectProjects()
+                case .project(let id):
+                    appState.selectProject(id: id)
                 case .settings:
                     appState.selectSettings()
                 }
@@ -263,6 +305,38 @@ struct CategoryListView: View {
             }
 
             Section {
+                ProjectSidebarRow(
+                    title: "Project Manager",
+                    subtitle: "\(appState.projectStore.projects.count) projects",
+                    systemImage: "folder.badge.gearshape",
+                    isSelected: appState.sidebarSelection == .projects
+                )
+                .tag(SidebarSelection.projects)
+
+                ForEach(appState.projectStore.projects) { project in
+                    ProjectSidebarRow(
+                        title: project.name,
+                        subtitle: "\(project.folders.count) folders · \(ByteFormatting.string(for: project.totalAllocatedBytes))",
+                        systemImage: "folder",
+                        isSelected: appState.selectedProjectID == project.id
+                    )
+                    .tag(SidebarSelection.project(project.id))
+                }
+            } header: {
+                SidebarSectionHeader(title: "Projects")
+            }
+
+            Section {
+                ProjectSidebarRow(
+                    title: "App Manager",
+                    subtitle: appState.hasLoadedApplicationInventory
+                        ? "\(appState.installedApplications.count) installed"
+                        : "Installed applications",
+                    systemImage: "square.grid.2x2",
+                    isSelected: appState.sidebarSelection == .appManager
+                )
+                .tag(SidebarSelection.appManager)
+
                 SettingsRowView(isSelected: appState.sidebarSelection == .settings)
                     .tag(SidebarSelection.settings)
             } header: {

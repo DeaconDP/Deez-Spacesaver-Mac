@@ -10,6 +10,16 @@ enum ResponsiveLayout {
 
     static let compactDetailWidth: CGFloat = 520
     static let mediumDetailWidth: CGFloat = 680
+    static let compactDetailHeight: CGFloat = 600
+    static let readableContentMaxWidth: CGFloat = 1180
+
+    static func detailPadding(for width: CGFloat) -> CGFloat {
+        width < compactDetailWidth ? AppLayout.compactEdge : AppLayout.edge
+    }
+
+    static func projectHeaderMaxHeight(for detailHeight: CGFloat) -> CGFloat {
+        min(260, max(170, detailHeight * 0.42))
+    }
 
     static func bannerScrollMaxHeight(for detailHeight: CGFloat) -> CGFloat {
         min(220, max(120, detailHeight * 0.28))

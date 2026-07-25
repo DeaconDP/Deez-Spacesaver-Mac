@@ -10,11 +10,28 @@ DERIVED="$ROOT/build/DerivedData"
 PRODUCT="$DERIVED/Build/Products/$CONFIGURATION/DeezSpacesaver.app"
 DIST="$ROOT/dist"
 
-export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+resolve_developer_dir() {
+  local selected default="/Applications/Xcode.app/Contents/Developer"
+  selected="$(xcode-select -p 2>/dev/null || true)"
+  if [[ -n "$selected" && -d "$selected" ]] && DEVELOPER_DIR="$selected" xcodebuild -version >/dev/null 2>&1; then
+    echo "$selected"
+    return 0
+  fi
+  if [[ -d "$default" ]] && DEVELOPER_DIR="$default" xcodebuild -version >/dev/null 2>&1; then
+    echo "$default"
+    return 0
+  fi
+  return 1
+}
 
-if [[ ! -d "$DEVELOPER_DIR" ]]; then
-  echo "Xcode not found at $DEVELOPER_DIR" >&2
-  exit 1
+if [[ -z "${DEVELOPER_DIR:-}" ]] || [[ ! -d "${DEVELOPER_DIR:-}" ]]; then
+  DEVELOPER_DIR="$(resolve_developer_dir || true)"
+fi
+export DEVELOPER_DIR
+
+if [[ -z "${DEVELOPER_DIR:-}" ]] || ! xcodebuild -version >/dev/null 2>&1; then
+  echo "→ Full Xcode unavailable; using Apple Command Line Tools"
+  exec "$ROOT/scripts/build-app-clt.sh" "$CONFIGURATION"
 fi
 
 echo "→ Regenerating Xcode project"
@@ -24,12 +41,19 @@ echo "→ Regenerating app icons"
 swift "$ROOT/scripts/generate-app-icon.swift"
 
 echo "→ Building DeezSpacesaver ($CONFIGURATION)"
+set +e
 xcodebuild \
   -project DeezSpacesaver.xcodeproj \
   -scheme DeezSpacesaver \
   -configuration "$CONFIGURATION" \
   -derivedDataPath "$DERIVED" \
   build
+BUILD_EXIT=$?
+set -e
+
+if [[ $BUILD_EXIT -ne 0 ]]; then
+  exit $BUILD_EXIT
+fi
 
 mkdir -p "$DIST"
 rm -rf "$DIST/DeezSpacesaver.app"

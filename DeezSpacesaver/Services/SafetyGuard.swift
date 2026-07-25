@@ -15,6 +15,13 @@ enum SafetyGuard {
         (path as NSString).standardizingPath
     }
 
+    static func canonicalPath(_ path: String) -> String {
+        URL(fileURLWithPath: normalizedPath(path))
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+            .path
+    }
+
     static func isDenied(_ path: String) -> Bool {
         let normalized = normalizedPath(path)
         return denyPrefixes.contains { normalized == $0 || normalized.hasPrefix($0 + "/") }
@@ -35,6 +42,23 @@ enum SafetyGuard {
             return category.id == CleanupCategory.appUninstall.id
         }
         return true
+    }
+
+    static func isSafeApplicationBundle(
+        _ appURL: URL,
+        under applicationsRoot: URL = URL(fileURLWithPath: "/Applications", isDirectory: true)
+    ) -> Bool {
+        guard appURL.pathExtension.localizedCaseInsensitiveCompare("app") == .orderedSame else {
+            return false
+        }
+
+        let canonicalRoot = canonicalPath(applicationsRoot.path)
+        let canonicalApp = canonicalPath(appURL.path)
+        guard canonicalApp.hasPrefix(canonicalRoot + "/") else { return false }
+
+        var isDirectory = ObjCBool(false)
+        return FileManager.default.fileExists(atPath: canonicalApp, isDirectory: &isDirectory)
+            && isDirectory.boolValue
     }
 
     static func requiresLargeBatchConfirmation(itemCount: Int, totalBytes: Int64) -> Bool {

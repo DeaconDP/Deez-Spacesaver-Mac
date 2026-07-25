@@ -38,12 +38,26 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(hasSeenFDAOnboarding, forKey: Keys.hasSeenFDAOnboarding) }
     }
 
+    @Published var projectFolderSortField: ProjectFolderSortField {
+        didSet {
+            UserDefaults.standard.set(projectFolderSortField.rawValue, forKey: Keys.projectFolderSortField)
+        }
+    }
+
+    @Published var projectFolderSortAscending: Bool {
+        didSet {
+            UserDefaults.standard.set(projectFolderSortAscending, forKey: Keys.projectFolderSortAscending)
+        }
+    }
+
     private enum Keys {
         static let largeFileThresholdMB = "largeFileThresholdMB"
         static let downloadsMinAgeDays = "downloadsMinAgeDays"
         static let unusedAppsMinDays = "unusedAppsMinDays"
         static let excludePaths = "excludePaths"
         static let hasSeenFDAOnboarding = "hasSeenFDAOnboarding"
+        static let projectFolderSortField = "projectFolderSortField"
+        static let projectFolderSortAscending = "projectFolderSortAscending"
     }
 
     private init() {
@@ -53,6 +67,10 @@ final class AppSettings: ObservableObject {
         unusedAppsMinDays = defaults.object(forKey: Keys.unusedAppsMinDays) as? Int ?? 90
         hasSeenFDAOnboarding = defaults.bool(forKey: Keys.hasSeenFDAOnboarding)
         excludePaths = Self.loadExcludePaths()
+        projectFolderSortField = ProjectFolderSortField(
+            rawValue: defaults.string(forKey: Keys.projectFolderSortField) ?? ""
+        ) ?? .size
+        projectFolderSortAscending = defaults.object(forKey: Keys.projectFolderSortAscending) as? Bool ?? false
     }
 
     var largeFileThresholdBytes: Int64 {

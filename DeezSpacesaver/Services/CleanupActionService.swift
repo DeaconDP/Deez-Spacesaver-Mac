@@ -1,7 +1,12 @@
+import AppKit
 import Foundation
 
 struct CleanupActionService {
-    private let trashService = TrashService()
+    private let trashService: any TrashServicing
+
+    init(trashService: any TrashServicing = TrashService()) {
+        self.trashService = trashService
+    }
 
     func performCleanup(
         items: [ScannableItem],
@@ -40,6 +45,59 @@ struct CleanupActionService {
         return CleanupActionResult(
             succeeded: result.succeeded,
             failed: result.failed,
+            message: message
+        )
+    }
+
+    func removeApplicationBundles(
+        _ applications: [InstalledApplication],
+        applicationsRoot: URL = URL(fileURLWithPath: "/Applications", isDirectory: true),
+        currentApplicationPath: String = Bundle.main.bundlePath
+    ) async -> CleanupActionResult {
+        guard !applications.isEmpty else {
+            return CleanupActionResult(succeeded: [], failed: [], message: "No apps selected.")
+        }
+
+        let runningBundleIdentifiers = Set(
+            NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier)
+        )
+        var validItems: [ScannableItem] = []
+        var failed: [(ScannableItem, String)] = []
+
+        for application in applications {
+            let item = ScannableItem(
+                path: application.path,
+                name: application.name,
+                sizeBytes: application.sizeBytes,
+                modifiedDate: application.lastOpenedDate,
+                categoryID: CleanupCategory.appUninstall.id,
+                riskLevel: .caution
+            )
+            let appURL = URL(fileURLWithPath: application.path, isDirectory: true)
+            let bundleIdentifier = AppUninstallScanner.bundleIdentifier(at: appURL)
+            let availability = ApplicationInventoryService.removalAvailability(
+                for: appURL,
+                bundleIdentifier: bundleIdentifier,
+                applicationsRoot: applicationsRoot,
+                currentApplicationPath: currentApplicationPath,
+                runningBundleIdentifiers: runningBundleIdentifiers
+            )
+            guard availability == .removable else {
+                failed.append((item, availability.reason ?? "This app cannot be removed safely."))
+                continue
+            }
+            validItems.append(item)
+        }
+
+        let result = await trashService.moveToTrash(items: validItems)
+        failed.append(contentsOf: result.failed)
+        var message = "Moved \(result.succeeded.count) app\(result.succeeded.count == 1 ? "" : "s") to Trash."
+        if !failed.isEmpty {
+            message += " \(failed.count) could not be removed."
+        }
+        return CleanupActionResult(
+            succeeded: result.succeeded,
+            failed: failed,
             message: message
         )
     }

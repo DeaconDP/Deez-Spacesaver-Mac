@@ -1,7 +1,15 @@
 import AppKit
 import Foundation
 
-struct TrashService {
+protocol TrashServicing {
+    func moveToTrash(items: [ScannableItem]) async -> (
+        succeeded: [ScannableItem],
+        failed: [(ScannableItem, String)]
+    )
+    func emptyTrash() throws
+}
+
+struct TrashService: TrashServicing {
     private let fileManager = FileManager.default
 
     func moveToTrash(items: [ScannableItem]) async -> (succeeded: [ScannableItem], failed: [(ScannableItem, String)]) {

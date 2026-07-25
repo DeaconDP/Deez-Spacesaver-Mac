@@ -6,16 +6,11 @@ let repoRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
 
-let defaultSource = repoRoot
-    .appendingPathComponent("scripts/icon-source-1024.png")
 let defaultOutput = repoRoot
     .appendingPathComponent("DeezSpacesaver/Assets.xcassets/AppIcon.appiconset")
 
-let sourceURL = CommandLine.arguments.count > 1
+let outputDir = CommandLine.arguments.count > 1
     ? URL(fileURLWithPath: CommandLine.arguments[1])
-    : defaultSource
-let outputDir = CommandLine.arguments.count > 2
-    ? URL(fileURLWithPath: CommandLine.arguments[2])
     : defaultOutput
 
 let sizes: [(name: String, pixels: Int)] = [
@@ -31,83 +26,104 @@ let sizes: [(name: String, pixels: Int)] = [
     ("icon_512x512@2x.png", 1024),
 ]
 
-// macOS icon grid on a 1024 master (matches system app geometry on Tahoe+).
-private let masterCanvas: CGFloat = 1024
-private let masterBodyInset: CGFloat = 100 // (1024 - 824) / 2
-private let masterCornerRadius: CGFloat = 185.4
-
-guard let sourceImage = NSImage(contentsOf: sourceURL) else {
-    fputs("error: could not load source icon at \(sourceURL.path)\n", stderr)
-    exit(1)
+// Matches CyberpunkColors in the app.
+enum Palette {
+    static let bgTop = CGColor(red: 10 / 255, green: 14 / 255, blue: 24 / 255, alpha: 1)
+    static let bgBottom = CGColor(red: 4 / 255, green: 6 / 255, blue: 12 / 255, alpha: 1)
+    static let accent = CGColor(red: 0, green: 229 / 255, blue: 1, alpha: 1)
+    static let accentSoft = CGColor(red: 0, green: 229 / 255, blue: 1, alpha: 0.18)
+    static let accentSecondary = CGColor(red: 228 / 255, green: 0, blue: 143 / 255, alpha: 0.35)
 }
 
-guard let sourceRep = sourceImage.representations.max(by: {
-    ($0.pixelsWide * $0.pixelsHigh) < ($1.pixelsWide * $1.pixelsHigh)
-}) else {
-    fputs("error: source icon has no bitmap representations\n", stderr)
-    exit(1)
-}
+func drawDatabase(in context: CGContext, canvas: CGFloat) {
+    let cx = canvas * 0.5
+    let diskWidth = canvas * 0.56
+    let diskHeight = canvas * 0.13
+    let gap = canvas * 0.055
+    let totalHeight = diskHeight * 3 + gap * 2
+    var y = (canvas - totalHeight) / 2 + diskHeight * 0.35
 
-func macOSIconBodyRect(forCanvas size: CGFloat) -> (body: NSRect, cornerRadius: CGFloat) {
-    let scale = size / masterCanvas
-    let inset = masterBodyInset * scale
-    let bodySize = size - inset * 2
-    let cornerRadius = masterCornerRadius * scale
-    return (NSRect(x: inset, y: inset, width: bodySize, height: bodySize), cornerRadius)
-}
+    func drawDisk(topY: CGFloat) {
+        let rect = CGRect(
+            x: cx - diskWidth / 2,
+            y: topY,
+            width: diskWidth,
+            height: diskHeight
+        )
+        let ellipseHeight = diskHeight * 0.72
+        let topEllipse = CGRect(
+            x: rect.minX,
+            y: rect.maxY - ellipseHeight,
+            width: rect.width,
+            height: ellipseHeight
+        )
+        let bottomEllipse = CGRect(
+            x: rect.minX,
+            y: rect.minY,
+            width: rect.width,
+            height: ellipseHeight
+        )
 
-func resizeIcon(pixels: Int) throws -> Data {
-    let size = CGFloat(pixels)
-    guard let bitmap = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: pixels,
-        pixelsHigh: pixels,
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .deviceRGB,
-        bytesPerRow: 0,
-        bitsPerPixel: 0
-    ) else {
-        throw NSError(domain: "IconGen", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create bitmap"])
+        context.setFillColor(Palette.accent)
+        context.fillEllipse(in: bottomEllipse)
+        context.fill(rect)
+        context.setFillColor(Palette.accent.copy(alpha: 0.82)!)
+        context.fillEllipse(in: topEllipse)
     }
 
-    let canvas = NSRect(x: 0, y: 0, width: size, height: size)
-    let geometry = macOSIconBodyRect(forCanvas: size)
+    drawDisk(topY: y)
+    y += diskHeight + gap
+    drawDisk(topY: y)
+    y += diskHeight + gap
+    drawDisk(topY: y)
+}
 
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+func drawIcon(pixels: Int) throws -> Data {
+    let canvas = CGFloat(pixels)
 
-    NSColor.clear.setFill()
-    NSBezierPath(rect: canvas).fill()
+    guard let context = CGContext(
+        data: nil,
+        width: pixels,
+        height: pixels,
+        bitsPerComponent: 8,
+        bytesPerRow: pixels * 4,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw NSError(domain: "IconGen", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create bitmap context"])
+    }
 
-    // Soft system shadow so the icon matches native apps on the Dock/Launchpad grid.
-    NSGraphicsContext.current?.saveGraphicsState()
-    let shadow = NSShadow()
-    shadow.shadowColor = NSColor.black.withAlphaComponent(0.5)
-    shadow.shadowOffset = NSSize(width: 0, height: -12 * (size / masterCanvas))
-    shadow.shadowBlurRadius = 28 * (size / masterCanvas)
-    shadow.set()
+    if let gradient = CGGradient(
+        colorsSpace: CGColorSpaceCreateDeviceRGB(),
+        colors: [Palette.bgTop, Palette.bgBottom] as CFArray,
+        locations: [0, 1]
+    ) {
+        context.drawLinearGradient(
+            gradient,
+            start: CGPoint(x: canvas * 0.5, y: canvas),
+            end: CGPoint(x: canvas * 0.5, y: 0),
+            options: []
+        )
+    }
 
-    let bodyPath = NSBezierPath(roundedRect: geometry.body, xRadius: geometry.cornerRadius, yRadius: geometry.cornerRadius)
-    NSColor.black.setFill()
-    bodyPath.fill()
-    NSGraphicsContext.current?.restoreGraphicsState()
+    context.saveGState()
+    context.setFillColor(Palette.accentSoft)
+    context.fillEllipse(in: CGRect(x: canvas * 0.1, y: canvas * 0.08, width: canvas * 0.8, height: canvas * 0.62))
+    context.setFillColor(Palette.accentSecondary)
+    context.fillEllipse(in: CGRect(x: canvas * 0.22, y: canvas * 0.02, width: canvas * 0.56, height: canvas * 0.38))
+    context.restoreGState()
 
-    NSGraphicsContext.current?.saveGraphicsState()
-    bodyPath.addClip()
-    sourceImage.draw(
-        in: canvas,
-        from: NSRect(x: 0, y: 0, width: sourceRep.pixelsWide, height: sourceRep.pixelsHigh),
-        operation: .copy,
-        fraction: 1
+    context.saveGState()
+    context.setShadow(
+        offset: CGSize(width: 0, height: -canvas * 0.01),
+        blur: canvas * 0.05,
+        color: Palette.accent.copy(alpha: 0.45)
     )
-    NSGraphicsContext.current?.restoreGraphicsState()
+    drawDatabase(in: context, canvas: canvas)
+    context.restoreGState()
 
-    NSGraphicsContext.restoreGraphicsState()
-
-    guard let png = bitmap.representation(using: .png, properties: [:]) else {
+    guard let outputImage = context.makeImage(),
+          let png = NSBitmapImageRep(cgImage: outputImage).representation(using: .png, properties: [:]) else {
         throw NSError(domain: "IconGen", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to encode PNG"])
     }
     return png
@@ -117,7 +133,7 @@ try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectori
 
 for entry in sizes {
     let fileURL = outputDir.appendingPathComponent(entry.name)
-    let png = try resizeIcon(pixels: entry.pixels)
+    let png = try drawIcon(pixels: entry.pixels)
     try png.write(to: fileURL)
     print("Wrote \(fileURL.path)")
 }

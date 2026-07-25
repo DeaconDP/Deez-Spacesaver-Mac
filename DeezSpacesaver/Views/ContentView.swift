@@ -24,13 +24,18 @@ struct ContentView: View {
                 )
         } detail: {
             DetailSizeReader { size in
-                detailPane(size: size)
-                    .environment(\.detailWidth, size.width)
-                    .environment(\.detailHeight, size.height)
+                let padding = ResponsiveLayout.detailPadding(for: size.width)
+                let contentSize = CGSize(
+                    width: max(0, size.width - (padding * 2)),
+                    height: max(0, size.height - (padding * 2))
+                )
+
+                detailPane(size: contentSize)
+                    .environment(\.detailWidth, contentSize.width)
+                    .environment(\.detailHeight, contentSize.height)
+                    .padding(padding)
             }
-            .padding(AppLayout.edge)
             .navigationTitle("")
-            .modifier(RemoveNavigationTitleToolbarIfAvailable())
         }
         .frame(
             minWidth: ResponsiveLayout.windowMinWidth,
@@ -48,23 +53,35 @@ struct ContentView: View {
 
     private func detailPane(size: CGSize) -> some View {
         ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                ScrollView {
-                    DashboardView()
-                        .padding(.horizontal, AppLayout.compactEdge)
-                        .padding(.vertical, AppLayout.compactEdge)
+            Group {
+                if appState.sidebarSelection == .appManager {
+                    AppManagerView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(contentTransition)
+                } else if isProjectSelection {
+                    ProjectManagerView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(contentTransition)
+                } else {
+                    VStack(spacing: 0) {
+                        ScrollView {
+                            DashboardView()
+                                .padding(.horizontal, AppLayout.compactEdge)
+                                .padding(.vertical, AppLayout.compactEdge)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxHeight: ResponsiveLayout.dashboardScrollMaxHeight(for: size.height))
+
+                        Divider()
+                            .opacity(0.6)
+                            .background(CyberpunkColors.borderSubtle)
+                            .padding(.top, 4)
+
+                        detailContent
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .layoutPriority(1)
+                    }
                 }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxHeight: ResponsiveLayout.dashboardScrollMaxHeight(for: size.height))
-
-                Divider()
-                    .opacity(0.6)
-                    .background(CyberpunkColors.borderSubtle)
-                    .padding(.top, 4)
-
-                detailContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .layoutPriority(1)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -86,6 +103,15 @@ struct ContentView: View {
         )
     }
 
+    private var isProjectSelection: Bool {
+        switch appState.sidebarSelection {
+        case .projects, .project:
+            return true
+        default:
+            return false
+        }
+    }
+
     @ViewBuilder
     private var detailContent: some View {
         Group {
@@ -102,15 +128,5 @@ struct ContentView: View {
             CyberpunkAnimation.apply(CyberpunkAnimation.standard, reduceMotion: reduceMotion),
             value: appState.sidebarSelection
         )
-    }
-}
-
-private struct RemoveNavigationTitleToolbarIfAvailable: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(macOS 15.0, *) {
-            content.toolbar(removing: .title)
-        } else {
-            content
-        }
     }
 }
