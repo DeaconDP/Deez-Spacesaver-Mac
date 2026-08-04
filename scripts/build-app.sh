@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared xcodebuild step — outputs to dist/DeezSpacesaver.app
+# Shared xcodebuild step — outputs to dist/Deez-Spacesaver-Mac.app
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -7,7 +7,7 @@ cd "$ROOT"
 
 CONFIGURATION="${1:-Debug}"
 DERIVED="$ROOT/build/DerivedData"
-PRODUCT="$DERIVED/Build/Products/$CONFIGURATION/DeezSpacesaver.app"
+PRODUCT="$DERIVED/Build/Products/$CONFIGURATION/Deez-Spacesaver-Mac.app"
 DIST="$ROOT/dist"
 
 resolve_developer_dir() {
@@ -40,7 +40,7 @@ python3 "$ROOT/scripts/generate-xcodeproj.py"
 echo "→ Regenerating app icons"
 swift "$ROOT/scripts/generate-app-icon.swift"
 
-echo "→ Building DeezSpacesaver ($CONFIGURATION)"
+echo "→ Building Deez-Spacesaver-Mac ($CONFIGURATION)"
 set +e
 xcodebuild \
   -project DeezSpacesaver.xcodeproj \
@@ -56,13 +56,13 @@ if [[ $BUILD_EXIT -ne 0 ]]; then
 fi
 
 mkdir -p "$DIST"
-rm -rf "$DIST/DeezSpacesaver.app"
-cp -R "$PRODUCT" "$DIST/DeezSpacesaver.app"
-touch "$DIST/DeezSpacesaver.app"
+rm -rf "$DIST/Deez-Spacesaver-Mac.app"
+cp -R "$PRODUCT" "$DIST/Deez-Spacesaver-Mac.app"
+touch "$DIST/Deez-Spacesaver-Mac.app"
 
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
 if [[ -x "$LSREGISTER" ]]; then
-  "$LSREGISTER" -f -R -trusted "$DIST/DeezSpacesaver.app" >/dev/null
+  "$LSREGISTER" -f -R -trusted "$DIST/Deez-Spacesaver-Mac.app" >/dev/null
 fi
 
-echo "→ Built: $DIST/DeezSpacesaver.app"
+echo "→ Built: $DIST/Deez-Spacesaver-Mac.app"

@@ -5,8 +5,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 ENV_FILE="${NOTARIZE_ENV:-$ROOT/notarize.env}"
-APP="$ROOT/dist/DeezSpacesaver.app"
-DMG="$ROOT/dist/DeezSpacesaver.dmg"
+APP="$ROOT/dist/Deez-Spacesaver-Mac.app"
+DMG="$ROOT/dist/Deez-Spacesaver-Mac.dmg"
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "Create $ENV_FILE with:"

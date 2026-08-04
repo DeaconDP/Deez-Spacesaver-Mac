@@ -1,4 +1,4 @@
-# DeezSpacesaver
+# Deez-Spacesaver-Mac
 
 A cyberpunk-styled macOS utility that helps you reclaim disk space safely. Scan categories, review what was found, and move items to Trash — nothing is permanently deleted without you emptying Trash yourself.
 
@@ -12,10 +12,10 @@ No terminal required. Install and run like any Mac app.
 
 ### Install
 
-1. Download **DeezSpacesaver.dmg** from the [Releases](https://github.com/worldbuild-io/DeezSpacesaver/releases) page.
+1. Download **Deez-Spacesaver-Mac.dmg** from the [Releases](https://github.com/worldbuild-io/DeezSpacesaver/releases) page.
 2. Double-click the DMG to open it.
-3. Drag **DeezSpacesaver** into the **Applications** folder.
-4. Open **Applications** and double-click **DeezSpacesaver**.
+3. Drag **Deez-Spacesaver-Mac** into the **Applications** folder.
+4. Open **Applications** and double-click **Deez-Spacesaver-Mac**.
 
 On first launch, the app shows a short welcome guide. You can optionally grant **Full Disk Access** (System Settings → Privacy & Security → Full Disk Access) so Mail, Messages, and browser cache categories can scan protected folders.
 
@@ -224,7 +224,7 @@ macOS swap files and temporary system caches accumulate during long uptime. A re
 
 Double-click **`run.command`** in the project folder. It builds the app if needed, launches it, and closes the terminal window automatically.
 
-First time only: if macOS blocks the unsigned build, right-click **DeezSpacesaver** in `dist/` and choose **Open**.
+First time only: if macOS blocks the unsigned build, right-click **Deez-Spacesaver-Mac** in `dist/` and choose **Open**.
 
 ### Build
 
@@ -232,7 +232,7 @@ First time only: if macOS blocks the unsigned build, right-click **DeezSpacesave
 # Regenerate project (after adding Swift files)
 python3 scripts/generate-xcodeproj.py
 
-# Debug build → dist/DeezSpacesaver.app
+# Debug build → dist/Deez-Spacesaver-Mac.app
 ./scripts/build-local.sh
 
 # Release build + DMG

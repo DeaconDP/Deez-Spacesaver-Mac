@@ -45,7 +45,7 @@ struct OnboardingView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(CyberpunkColors.accent)
 
-            Text("Welcome to DeezSpacesaver")
+            Text("Welcome to Deez-Spacesaver-Mac")
                 .font(CyberpunkTypography.display(22))
                 .foregroundStyle(CyberpunkColors.textPrimary)
 
@@ -98,7 +98,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 8) {
                 step("1", "Click Add Full Disk Access below", "Opens System Settings and reveals the app in Finder")
                 step("2", "Click the + button at the bottom of the Full Disk Access list")
-                step("3", "Select DeezSpacesaver in Finder", "We highlight it for you")
+                step("3", "Select Deez-Spacesaver-Mac in Finder", "We highlight it for you")
                 step("4", "Toggle it on, return here, and click Check Again", "If still not detected, use Quit & Reopen")
             }
             .padding(16)

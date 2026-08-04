@@ -132,7 +132,7 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    Text("DeezSpacesaver")
+                    Text("Deez-Spacesaver-Mac")
                         .font(CyberpunkTypography.display(14))
                     Text("Created by deac.online @ worldbuild.io")
                         .font(CyberpunkTypography.body(12))
