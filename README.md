@@ -1,6 +1,8 @@
 # Deez Spacesaver Mac
 
-![Deez Spacesaver Mac — storage overview](docs/screenshots/hero.png)
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/DeaconDP/Deez-Spacesaver-Mac@main/docs/screenshots/hero.png" alt="Deez Spacesaver Mac" width="720" />
+</p>
 
 Cyberpunk-styled macOS utility to reclaim disk space safely — scan, review, move to Trash. Nothing is permanently deleted until you empty Trash yourself.
 
@@ -43,7 +45,7 @@ Category overview and the full per-category guide: **[docs/categories.md](docs/c
 <details>
 <summary>More screenshots</summary>
 
-![Storage overview](docs/screenshots/01-main.png)
+<img src="https://cdn.jsdelivr.net/gh/DeaconDP/Deez-Spacesaver-Mac@main/docs/screenshots/01-main.png" alt="Storage overview" width="720" />
 
 </details>
 
