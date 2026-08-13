@@ -245,7 +245,7 @@ python3 scripts/generate-xcodeproj.py
 ./scripts/verify.sh
 ```
 
-This regenerates the Xcode project, builds, and runs unit tests — the same steps CI runs.
+This regenerates the Xcode project, builds, and runs unit tests locally.
 
 Install a pre-push hook so broken builds are caught before they reach GitHub:
 
